@@ -1,60 +1,80 @@
-import React, { useEffect, useState } from "react";
-import { Helmet } from "react-helmet";
-import { Link } from "gatsby";
-import "../styles/index.css";
+import React from "react";
+import { Link, graphql } from "gatsby";
+import { css } from "@emotion/core";
+import { rhythm } from "../utils/typography";
+import Layout from "../components/layout";
 
-function Index() {
-  const [date, setDate] = useState(null);
-  useEffect(() => {
-    async function getDate() {
-      const res = await fetch("/api/date");
-      const newDate = await res.text();
-      setDate(newDate);
-    }
-    getDate();
-  }, []);
+export default function Home({ data }) {
   return (
-    <main>
-      <Helmet>
-        <title>Gatsby + Node.js (TypeScript) API</title>
-      </Helmet>
-      <h1>Gatsy + Node.js (TypeScript) API</h1>
-      <h2>
-        Deployed with{" "}
-        <a
-          href="https://vercel.com/docs"
-          target="_blank"
-          rel="noreferrer noopener"
+    <Layout>
+      <div>
+        <h1
+          css={css`
+            display: inline-block;
+            border-bottom: 1px solid;
+          `}
         >
-          Vercel
-        </a>
-        !
-      </h2>
-
-      <img src="https://source.unsplash.com/random/400x200" alt="" />
-      <Link to="/contact">Contact</Link>
-      <p>
-        <a
-          href="https://github.com/vercel/vercel/blob/master/gatsby"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          This project
-        </a>{" "}
-        is a <a href="https://www.gatsbyjs.org/">Gatsby</a> app with two
-        directories, <code>/src</code> for static content and <code>/api</code>{" "}
-        which contains a serverless{" "}
-        <a href="https://nodejs.org/en/">Node.js (TypeScript)</a> function. See{" "}
-        <a href="/api/date">
-          <code>api/date</code> for the Date API with Node.js (TypeScript)
-        </a>
-        .
-      </p>
-      <br />
-      <h2>The date according to Node.js (TypeScript) is:</h2>
-      <p>{date ? date : "Loading date..."}</p>
-    </main>
+          Amazing Pandas Eating Things
+        </h1>
+        <h4>{data.allMarkdownRemark.totalCount} Posts</h4>
+        {data.allMarkdownRemark.edges.map(({ node }) => (
+          <div key={node.id}>
+            <Link
+              to={node.fields.slug}
+              css={css`
+                text-decoration: none;
+                color: inherit;
+              `}
+            >
+              <h3
+                css={css`
+                  margin-bottom: ${rhythm(1 / 4)};
+                `}
+              >
+                {node.frontmatter.title}{" "}
+                <span
+                  css={css`
+                    color: #bbb;
+                  `}
+                >
+                  — {node.frontmatter.date}
+                </span>
+                <span
+                  css={css`
+                    font-size: 10px;
+                  `}
+                >
+                  {" "}
+                  ({node.timeToRead} {node.timeToRead === 1 ? `min` : `mins`})
+                </span>
+              </h3>
+              <p>{node.excerpt}</p>
+            </Link>
+          </div>
+        ))}
+      </div>
+    </Layout>
   );
 }
 
-export default Index;
+export const query = graphql`
+  query {
+    allMarkdownRemark(sort: { fields: [frontmatter___date], order: DESC }) {
+      totalCount
+      edges {
+        node {
+          id
+          frontmatter {
+            title
+            date(formatString: "DD MMMM, YYYY")
+          }
+          timeToRead
+          fields {
+            slug
+          }
+          excerpt
+        }
+      }
+    }
+  }
+`;
